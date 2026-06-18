@@ -33,8 +33,12 @@ K-Stock Live는 Docker 기반으로 구동됩니다. 사용자 PC에 **Docker De
 
 1. 화면 우측 상단의 톱니바퀴 아이콘(설정)을 클릭합니다.
 2. 환경 설정 창(Setup Modal)이 열리면 아래 항목들을 입력합니다:
-   - **Google Gemini API Key:** AI 투자 브리핑 및 추천 점수 산정에 필요합니다. (Google AI Studio에서 무료 발급 가능)
-   - **한국투자증권 APP KEY & APP SECRET & 계좌번호:** 실시간 주가 데이터 및 수급 정보 수신에 필요합니다. (한국투자증권 OPEN API 서비스 신청 필요)
+   - **Google Gemini API Key:** AI 투자 브리핑 및 추천 점수 산정에 필요합니다.
+     - 발급 링크: [Google AI Studio API Keys](https://aistudio.google.com/app/api-keys?project=gen-lang-client-0541736379)
+   - **한국투자증권 APP KEY & APP SECRET & 계좌번호:** 실시간 주가 데이터 및 수급 정보 수신에 필요합니다.
+     - [APP KEY 발급 경로]
+       1) 한국투자증권 모바일 앱(MTS) 이용 시: 고객지원 > 거래서비스 신청 > Open API 서비스
+       2) PC 웹사이트 이용 시: [한국투자증권 API 포털](https://apiportal.koreainvestment.com/intro) 접속 후 우측 상단 'API 신청' 버튼 클릭
 3. 정보를 모두 입력한 후 [설정 저장] 버튼을 누르고 창을 닫습니다.
 4. 브라우저를 한 번 새로고침(F5) 하시면 실시간 데이터 수집과 AI 분석이 정상적으로 시작됩니다.
 
