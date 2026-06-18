@@ -1,0 +1,186 @@
+services:
+  # ─── Application Services ──────────────────────────────────────────────────
+  kstock-frontend:
+    image: kndoll/kstock-frontend:latest
+    container_name: kstock-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - kstock-server
+    networks:
+      - kstock-network
+
+  kstock-server:
+    image: kndoll/kstock-server:latest
+    container_name: kstock-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/kstock
+      - SPRING_DATASOURCE_USERNAME=kstock
+      - SPRING_DATASOURCE_PASSWORD=kstock_pwd
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      - CHROMA_COLLECTION=news
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_JPA_PROPERTIES_HIBERNATE_TEMP_USE_JDBC_METADATA_DEFAULTS=false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - kstock-network
+
+  kstock-worker:
+    image: kndoll/kstock-worker:latest
+    container_name: kstock-worker
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/kstock
+      - SPRING_DATASOURCE_USERNAME=kstock
+      - SPRING_DATASOURCE_PASSWORD=kstock_pwd
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      - CHROMA_COLLECTION=news
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_JPA_PROPERTIES_HIBERNATE_TEMP_USE_JDBC_METADATA_DEFAULTS=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - kstock-network
+
+  # ─── Infrastructure Services ───────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: kstock-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=kstock
+      - POSTGRES_PASSWORD=kstock_pwd
+      - POSTGRES_DB=kstock
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kstock"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kstock-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: kstock-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - kstock-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: kstock-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_VM_MEMORY_HIGH_WATERMARK_RELATIVE=0.6
+    mem_limit: 1024m
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "check_running" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kstock-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kstock-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_NODE_ID=1
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:29093
+      - KAFKA_LISTENERS=PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/9092' || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - kstock-network
+
+  chromadb:
+    image: chromadb/chroma:0.5.11
+    container_name: kstock-chromadb
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    networks:
+      - kstock-network
+
+
+
+networks:
+  kstock-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: kstock_postgres_data
+  kafka_data:
+    name: kstock_kafka_data
+  chroma_data:
+    name: kstock_chroma_data
