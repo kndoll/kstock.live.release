@@ -32,7 +32,7 @@ K-Stock Live는 Docker 기반으로 구동됩니다. 사용자 PC에 **Docker De
 프로그램이 켜지면 면책 조항 동의 후 메인 대시보드에 진입하게 됩니다. 정상적인 주식 데이터 수신과 AI 분석을 위해 다음 절차를 진행해 주십시오.
 
 1. 화면 우측 상단의 톱니바퀴 아이콘(설정)을 클릭합니다.
-2. 환경 설정 창(Setup Modal)이 열리면 아래 항목들을 입력합니다:
+2. 환경 설정 창이 열리면 아래 항목들을 입력합니다:
    - **Google Gemini API Key:** AI 투자 브리핑 및 추천 점수 산정에 필요합니다.
      - 발급 링크: [Google AI Studio API Keys](https://aistudio.google.com/app/api-keys?project=gen-lang-client-0541736379)
    - **한국투자증권 APP KEY & APP SECRET & 계좌번호:** 실시간 주가 데이터 및 수급 정보 수신에 필요합니다.
@@ -54,7 +54,7 @@ K-Stock Live는 Docker 기반으로 구동됩니다. 사용자 PC에 **Docker De
 
 ---
 
-## 5. 문제 해결 (Troubleshooting)
+## 5. 문제 해결
 
 - **Q. start.bat(또는 start.command)을 실행했는데 아무 일도 일어나지 않고 창이 바로 꺼집니다.**
   - A. Docker Desktop이 백그라운드에서 실행 중인지 확인해 주십시오. Docker 엔진이 켜져 있지 않으면 스크립트가 구동되지 않습니다.
