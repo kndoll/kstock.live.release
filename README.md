@@ -18,12 +18,12 @@ K-Stock Live는 Docker 기반으로 구동됩니다. 사용자 PC에 **Docker De
 - **실행:** 압축을 푼 폴더 안에 있는 `start.bat` 파일을 더블 클릭하여 실행합니다.
 - **종료 및 삭제:** 프로그램 사용을 완전히 마치고 컨테이너를 삭제하려면 `uninstall.bat` 파일을 더블 클릭하여 실행합니다.
 
-### Mac 사용자
+### Mac 및 Linux 사용자
 - **실행 권한 부여:** 터미널을 열고 스크립트가 있는 폴더로 이동한 뒤 `chmod +x start.command uninstall.command` 명령어를 입력하여 권한을 부여합니다.
 - **실행:** Finder에서 `start.command`를 더블 클릭하거나, 터미널에서 `./start.command`를 입력하여 실행합니다.
 - **종료 및 삭제:** `uninstall.command`를 더블 클릭하거나 터미널에서 `./uninstall.command`를 실행합니다.
 
-> **참고:** 최초 실행 시 검은색 터미널 창이 뜨고 필요한 Docker 이미지를 다운로드하며 컨테이너가 구축됩니다. 인터넷 환경에 따라 수 분 정도 소요될 수 있으니 창을 닫지 말고 대기해 주십시오. 구동이 완료되면 자동으로 브라우저가 열리고 `http://localhost:3000`에 접속됩니다.
+> **참고:** 최초 실행 시 검은색 터미널 창이 뜨고 필요한 Docker 이미지를 다운로드하며 컨테이너가 구축됩니다. 인터넷 환경에 따라 수 분 정도 소요될 수 있으니 창을 닫지 말고 대기해 주십시오. 구동이 완료되면 자동으로 브라우저가 열리고 `http://localhost`에 접속됩니다.
 
 ---
 
@@ -34,11 +34,11 @@ K-Stock Live는 Docker 기반으로 구동됩니다. 사용자 PC에 **Docker De
 1. 화면 우측 상단의 톱니바퀴 아이콘(설정)을 클릭합니다.
 2. 환경 설정 창(Setup Modal)이 열리면 아래 항목들을 입력합니다:
    - **Google Gemini API Key:** AI 투자 브리핑 및 추천 점수 산정에 필요합니다.
-     - 발급 링크: [Google AI Studio API Keys](https://aistudio.google.com/app/api-keys?project=gen-lang-client-0541736379)
+     - 발급 링크: <a href="https://aistudio.google.com/app/api-keys?project=gen-lang-client-0541736379" target="_blank">Google AI Studio API Keys</a>
    - **한국투자증권 APP KEY & APP SECRET & 계좌번호:** 실시간 주가 데이터 및 수급 정보 수신에 필요합니다.
      - [APP KEY 발급 경로]
        1) 한국투자증권 모바일 앱(MTS) 이용 시: 고객지원 > 거래서비스 신청 > Open API 서비스
-       2) PC 웹사이트 이용 시: [한국투자증권 API 포털](https://apiportal.koreainvestment.com/intro) 접속 후 우측 상단 'API 신청' 버튼 클릭
+       2) PC 웹사이트 이용 시: <a href="https://apiportal.koreainvestment.com/intro" target="_blank">한국투자증권 API 포털</a> 접속 후 우측 상단 'API 신청' 버튼 클릭
 3. 정보를 모두 입력한 후 [설정 저장] 버튼을 누르고 창을 닫습니다.
 4. 브라우저를 한 번 새로고침(F5) 하시면 실시간 데이터 수집과 AI 분석이 정상적으로 시작됩니다.
 
