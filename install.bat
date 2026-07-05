@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 title K-STOCK LIVE Launcher
 
 echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -23,6 +24,15 @@ if %errorlevel% neq 0 (
 )
 echo  [  OK ] Docker 환경 검증 완료.
 echo.
+
+if exist ".env" goto SKIP_ENV
+echo  [ ... ] 최초 설치 감지 - 보안 패스워드 자동 생성 중...
+powershell -NoProfile -Command "$p=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('POSTGRES_PASSWORD='+$p)"
+powershell -NoProfile -Command "$r=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('RABBITMQ_PASSWORD='+$r)"
+powershell -NoProfile -Command "$d=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('REDIS_PASSWORD='+$d)"
+echo  [  OK ] 보안 패스워드 생성 완료.
+echo.
+:SKIP_ENV
 
 echo  [ ... ] 기존 K-STOCK LIVE 컨테이너 정리 중 (충돌 방지)...
 docker compose down >nul 2>&1

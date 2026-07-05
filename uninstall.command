@@ -8,6 +8,28 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+IS_DESKTOP=false
+if which open >/dev/null 2>&1; then
+    IS_DESKTOP=true
+elif which xdg-open >/dev/null 2>&1 && [ -n "$DISPLAY" ]; then
+    IS_DESKTOP=true
+fi
+
+show_spinner() {
+  local pid=$1
+  local msg="$2"
+  local delay=0.1
+  local frames=( "⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏" )
+  while kill -0 $pid 2>/dev/null; do
+      for frame in "${frames[@]}"; do
+          if ! kill -0 $pid 2>/dev/null; then break; fi
+          printf "\r \033[0;36m%s\033[0m %s" "$frame" "$msg"
+          sleep $delay
+      done
+  done
+  printf "\r\033[K"
+}
+
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo -e "   _  __       _____ _______ ____   _____ _  __   _      _____      ________ "
 echo -e "  | |/ /      / ____|__   __/ __ \ / ____| |/ /  | |    |_   _\ \    / /  ____|"
@@ -28,36 +50,45 @@ read -p "  정말 진행하시겠습니까? (Y/N): " AREYOUSURE
 
 if [[ "$AREYOUSURE" != "Y" && "$AREYOUSURE" != "y" ]]; then
     echo ""
-    echo -e " ${GREEN}[  OK ] 제거 작업이 취소되었습니다.${NC}"
+    echo -e " ${GREEN}✔ 제거 작업이 취소되었습니다.${NC}"
+    echo ""
+    if [ "$IS_DESKTOP" = true ]; then
+        echo -e "  [ INFO ] 이제 이 터미널 창을 닫으셔도 됩니다."
+        echo ""
+    fi
     exit 0
 fi
 
 echo ""
-echo -e " [ ... ] Docker 데스크탑 데몬 확인 중..."
-if ! docker info >/dev/null 2>&1; then
+(docker info >/dev/null 2>&1) &
+show_spinner $! "Docker 데스크탑 데몬 확인 중..."
+wait $!
+if [ $? -ne 0 ]; then
     echo -e " ${RED}[ ✖ ] ERROR: 도커가 실행 중이 아니거나 설치되지 않았습니다.${NC}"
     echo -e "       제거 작업을 위해 Docker Desktop을 실행해주세요."
     echo ""
     exit 1
 fi
-echo -e " ${GREEN}[  OK ] Docker 환경 검증 완료.${NC}"
+echo -e " ${GREEN}✔ Docker 환경 검증 완료.${NC}"
 echo ""
 
 cd "$(dirname "$0")"
 
-echo -e " [ ... ] K-STOCK LIVE 컨테이너, 볼륨, 이미지 제거 중..."
-docker compose -f docker-compose.release.yml down -v --rmi all
-echo -e " ${GREEN}[  OK ] 모든 컨테이너와 이미지가 제거되었습니다.${NC}"
+(docker compose -f docker-compose.release.yml down -v --rmi all >/dev/null 2>&1) &
+show_spinner $! "K-STOCK LIVE 컨테이너, 볼륨, 이미지 제거 중..."
+wait $!
+rm -f .env >/dev/null 2>&1
+echo -e " ${GREEN}✔ 모든 컨테이너와 이미지가 제거되었습니다.${NC}"
 echo ""
 
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e " ${GREEN}[  OK ] K-STOCK LIVE가 성공적으로 제거되었습니다.${NC}"
-echo -e "         이제 이 폴더를 안전하게 삭제하셔도 됩니다."
+echo -e " ${GREEN}✔ K-STOCK LIVE가 성공적으로 제거되었습니다.${NC}"
+echo -e "         이제 이 설치 경로를 삭제하셔도 됩니다."
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo -e " 💡 이 창은 5초 뒤 자동으로 닫힙니다."
-echo ""
 
-sleep 5
-osascript -e 'tell application "Terminal" to close front window' >/dev/null 2>&1
+if [ "$IS_DESKTOP" = true ]; then
+    echo -e " 💡 이제 이 터미널 창을 닫으셔도 됩니다."
+    echo ""
+fi
 exit 0

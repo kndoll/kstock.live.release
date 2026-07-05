@@ -4,6 +4,11 @@ services:
     image: kndoll/kstock-frontend:latest
     container_name: kstock-web
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "80:80"
     depends_on:
@@ -15,16 +20,22 @@ services:
     image: kndoll/kstock-server:latest
     container_name: kstock-app
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/kstock
       - SPRING_DATASOURCE_USERNAME=kstock
-      - SPRING_DATASOURCE_PASSWORD=kstock_pwd
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=kstock
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
       - CHROMA_COLLECTION=news
@@ -50,16 +61,22 @@ services:
     image: kndoll/kstock-worker:latest
     container_name: kstock-worker
     restart: unless-stopped
-    ports:
-      - "8082:8082"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/kstock
       - SPRING_DATASOURCE_USERNAME=kstock
-      - SPRING_DATASOURCE_PASSWORD=kstock_pwd
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=kstock
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
       - CHROMA_COLLECTION=news
@@ -84,11 +101,14 @@ services:
     image: postgres:15-alpine
     container_name: kstock-postgres
     restart: unless-stopped
-    ports:
-      - "5432:5432"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       - POSTGRES_USER=kstock
-      - POSTGRES_PASSWORD=kstock_pwd
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=kstock
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -104,10 +124,14 @@ services:
     image: redis:7-alpine
     container_name: kstock-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD-SHELL", "redis-cli -a $REDIS_PASSWORD --no-auth-warning ping"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -118,13 +142,16 @@ services:
     image: rabbitmq:3-management-alpine
     container_name: kstock-rabbitmq
     restart: unless-stopped
-    ports:
-      - "5672:5672"
-      - "15672:15672"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=kstock
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
       - RABBITMQ_VM_MEMORY_HIGH_WATERMARK_RELATIVE=0.6
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="-rabbit log_levels [{connection,error}]"
     mem_limit: 1024m
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "-q", "check_running" ]
@@ -138,8 +165,11 @@ services:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kstock-kafka
     restart: unless-stopped
-    ports:
-      - "9092:9092"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       - KAFKA_NODE_ID=1
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
@@ -151,6 +181,7 @@ services:
       - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
       - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
       - CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+      - KAFKA_LOG4J_LOGGERS=kafka=WARN,state.change.logger=WARN
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
@@ -165,8 +196,11 @@ services:
     image: chromadb/chroma:0.5.11
     container_name: kstock-chromadb
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     volumes:
       - chroma_data:/chroma/chroma
     environment:
