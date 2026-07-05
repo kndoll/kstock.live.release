@@ -57,7 +57,7 @@ if [ ! -f ".env" ]; then
     REDIS_PWD=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 24)
     printf 'POSTGRES_PASSWORD=%s\nRABBITMQ_PASSWORD=%s\nREDIS_PASSWORD=%s\n' \
         "$POSTGRES_PWD" "$RABBITMQ_PWD" "$REDIS_PWD" > .env
-    echo -e " ${GREEN}✔ 보안 패스워드 생성 완료. (.env 파일에 저장되었습니다)${NC}"
+    echo -e " ${GREEN}✔ 보안 패스워드 생성 완료.${NC}"
     echo ""
 fi
 
