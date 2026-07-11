@@ -74,7 +74,7 @@ echo  [ ... ] 백엔드 서버 부팅 대기 중... (최대 30초 소요)
 timeout /t 15 >nul
 echo  [ ... ] 최신 한국투자증권(KIS) 종목 마스터 데이터 동기화 중...
 :sync_loop
-curl.exe -X POST -s -o /dev/null -w "%{http_code}" http://localhost/api/v1/stocks/sync | findstr "200" >nul
+curl.exe -X POST -s -o nul -w "%%{http_code}" http://localhost/api/v1/stocks/sync | findstr "200" >nul
 if errorlevel 1 (
     echo  [ ... ] 서버가 아직 준비되지 않았습니다. 5초 후 재시도...
     timeout /t 5 >nul
