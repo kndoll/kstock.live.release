@@ -1,5 +1,7 @@
 @echo off
 chcp 65001 >nul
+goto :init_encoding
+:init_encoding
 title K-STOCK LIVE Uninstaller
 
 echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -43,7 +45,8 @@ echo.
 echo  [ ... ] K-STOCK LIVE 컨테이너, 볼륨, 이미지 제거 중...
 docker compose -f docker-compose.release.yml down -v --rmi all
 if exist ".env" del /f /q ".env"
-echo  [  OK ] 모든 컨테이너와 이미지가 제거되었습니다.
+echo  [  OK ] 현재 폴더의 컨테이너가 모두 종료 및 제거되었습니다.
+echo          (단, 다른 경로에서 실행 중인 K-STOCK 컨테이너가 있다면 공용 이미지/볼륨은 보존됩니다.)
 echo.
 
 echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

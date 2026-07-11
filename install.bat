@@ -1,5 +1,7 @@
 @echo off
 chcp 65001 >nul
+goto :init_encoding
+:init_encoding
 title K-STOCK LIVE Launcher
 
 echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -68,9 +70,17 @@ if %errorlevel% neq 0 (
 echo  [  OK ] 웹 서버 및 워커 구동 완료.
 echo.
 
+echo  [ ... ] 백엔드 서버 부팅 대기 중... (최대 30초 소요)
+timeout /t 15 >nul
 echo  [ ... ] 최신 한국투자증권(KIS) 종목 마스터 데이터 동기화 중...
-curl.exe -X POST http://localhost/api/v1/stocks/sync >nul 2>&1
-echo  [  OK ] 종목 데이터 동기화 완료.
+:sync_loop
+curl.exe -X POST -s -o /dev/null -w "%{http_code}" http://localhost/api/v1/stocks/sync | findstr "200" >nul
+if errorlevel 1 (
+    echo  [ ... ] 서버가 아직 준비되지 않았습니다. 5초 후 재시도...
+    timeout /t 5 >nul
+    goto sync_loop
+)
+echo  [  OK ] 종목 데이터 동기화 성공.
 echo.
 
 echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -97,11 +97,21 @@ wait $!
 echo -e " ${GREEN}✔ 웹 서버 및 워커 구동 완료.${NC}"
 echo ""
 
-(curl -s -X POST http://localhost/api/v1/stocks/sync >/dev/null 2>&1) &
-show_spinner $! "최신 한국투자증권(KIS) 종목 마스터 데이터 동기화 중..."
-wait $!
-echo -e " ${GREEN}✔ 종목 데이터 동기화 완료.${NC}"
-echo ""
+  echo -e " ${YELLOW}[ ... ] 백엔드 서버 부팅 대기 중... (최대 30초 소요)${NC}"
+  sleep 15
+  
+  echo -e " ${YELLOW}[ ... ] 최신 한국투자증권(KIS) 종목 마스터 데이터 동기화 중...${NC}"
+  for i in {1..6}; do
+    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost/api/v1/stocks/sync)
+    if [ "$HTTP_STATUS" -eq 200 ]; then
+      echo -e " ${GREEN}[  OK ] 종목 데이터 동기화 성공.${NC}"
+      break
+    else
+      echo -e " ${YELLOW}[ ... ] 서버가 아직 준비되지 않았습니다. 5초 후 재시도 ($i/6)...${NC}"
+      sleep 5
+    fi
+  done
+  echo ""
 
 IS_DESKTOP=false
 if which open >/dev/null; then

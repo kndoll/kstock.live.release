@@ -77,8 +77,11 @@ cd "$(dirname "$0")"
 (docker compose -f docker-compose.release.yml down -v --rmi all >/dev/null 2>&1) &
 show_spinner $! "K-STOCK LIVE 컨테이너, 볼륨, 이미지 제거 중..."
 wait $!
-rm -f .env >/dev/null 2>&1
-echo -e " ${GREEN}✔ 모든 컨테이너와 이미지가 제거되었습니다.${NC}"
+if [ -f ".env" ]; then
+  rm -f ".env"
+fi
+echo -e " ${GREEN}✔ 현재 폴더의 컨테이너가 모두 종료 및 제거되었습니다.${NC}"
+echo -e "   (단, 다른 경로에서 실행 중인 K-STOCK 컨테이너가 있다면 공용 이미지/볼륨은 보존됩니다.)"
 echo ""
 
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
