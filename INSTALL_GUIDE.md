@@ -1,12 +1,12 @@
-# K-Stock Live 설치 가이드
+# K-STOCK LIVE 설치 가이드
 
-환영합니다. K-Stock Live는 AI(Gemini)와 한국투자증권 실시간 데이터를 결합한 로컬 기반 스마트 주식 분석 대시보드입니다. 아래 가이드를 따라 설치하고 프로그램을 실행해 주십시오.
+환영합니다. K-STOCK LIVE는 AI(Gemini)와 한국투자증권 실시간 데이터를 결합한 로컬 기반 스마트 주식 분석 대시보드입니다. 아래 가이드를 따라 설치하고 프로그램을 실행해 주십시오.
 
 ---
 
 ## 1. 설치 전 준비사항 (필수)
 
-K-Stock Live는 Docker 기반으로 구동됩니다. 사용자 PC에 **Docker Desktop**이 반드시 설치되어 있고, 실행 중이어야 합니다.
+K-STOCK LIVE는 Docker 기반으로 구동됩니다. 사용자 PC에 **Docker Desktop**이 반드시 설치되어 있고, 실행 중이어야 합니다.
 
 - **Docker Desktop 다운로드:** https://www.docker.com/products/docker-desktop
 - 다운로드 후 설치를 완료하고, 프로그램을 실행해 주십시오. (시스템 트레이에 Docker 아이콘이 정상적으로 표시되어야 합니다.)
