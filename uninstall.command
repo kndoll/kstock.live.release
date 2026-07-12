@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# K-Stock Live Mac/Linux 제거기
+# K-STOCK LIVE Mac/Linux 제거기
 
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
