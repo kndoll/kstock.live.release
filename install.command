@@ -61,6 +61,15 @@ if [ ! -f ".env" ]; then
     echo ""
 fi
 
+# 호스트의 실제 MAC 주소를 스캔하여 .env에 자동 주입 (도커 컨테이너 암호화 키 생성용)
+if ! grep -q "HOST_MAC_ADDRESS=" .env 2>/dev/null; then
+    MAC=$(ifconfig en0 2>/dev/null | awk '/ether/{print $2}' || ifconfig eth0 2>/dev/null | awk '/ether/{print $2}' || ip link show | awk '/ether/{print $2}' | head -n 1)
+    if [ -z "$MAC" ]; then
+        MAC="00:00:00:00:00:00"
+    fi
+    echo "HOST_MAC_ADDRESS=$MAC" >> .env
+fi
+
 (
   docker compose down >/dev/null 2>&1
   docker compose -f docker-compose.release.yml down >/dev/null 2>&1

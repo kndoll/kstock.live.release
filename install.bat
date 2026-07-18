@@ -36,6 +36,12 @@ echo  [  OK ] 보안 패스워드 생성 완료.
 echo.
 :SKIP_ENV
 
+:: 호스트의 실제 MAC 주소를 스캔하여 .env에 자동 주입 (도커 컨테이너 암호화 키 생성용)
+findstr /C:"HOST_MAC_ADDRESS=" .env >nul 2>&1
+if %errorlevel% neq 0 (
+    powershell -NoProfile -Command "$mac = (getmac /fo csv /nh | ConvertFrom-Csv -Header 'MAC','Transport' | Select-Object -ExpandProperty MAC -First 1); if (-not $mac) { $mac = '00-00-00-00-00-00' }; Add-Content -Path '.env' -Value ('HOST_MAC_ADDRESS=' + $mac.Replace('-',':'))"
+)
+
 echo  [ ... ] 기존 K-STOCK LIVE 컨테이너 정리 중 (충돌 방지)...
 docker compose down >nul 2>&1
 docker compose -f docker-compose.release.yml down >nul 2>&1
