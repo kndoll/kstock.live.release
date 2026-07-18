@@ -27,19 +27,22 @@ if %errorlevel% neq 0 (
 echo  [  OK ] Docker 환경 검증 완료.
 echo.
 
-if exist ".env" goto SKIP_ENV
-echo  [ ... ] 최초 설치 감지 - 보안 패스워드 자동 생성 중...
-powershell -NoProfile -Command "$p=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('POSTGRES_PASSWORD='+$p)"
-powershell -NoProfile -Command "$r=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('RABBITMQ_PASSWORD='+$r)"
-powershell -NoProfile -Command "$d=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('REDIS_PASSWORD='+$d)"
-echo  [  OK ] 보안 패스워드 생성 완료.
-echo.
-:SKIP_ENV
-
-:: 호스트의 실제 MAC 주소를 스캔하여 .env에 자동 주입 (도커 컨테이너 암호화 키 생성용)
-findstr /C:"HOST_MAC_ADDRESS=" .env >nul 2>&1
+:: K-STOCK 설정 데이터 볼륨 확인 및 환경변수 주입
+docker volume ls | findstr /C:"kstock_config_data" >nul 2>&1
 if %errorlevel% neq 0 (
+    echo  [ ... ] 최초 설치 감지 - 암호화 볼륨(Volume) 생성 및 설정 중...
+    powershell -NoProfile -Command "$p=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('POSTGRES_PASSWORD='+$p)"
+    powershell -NoProfile -Command "$r=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('RABBITMQ_PASSWORD='+$r)"
+    powershell -NoProfile -Command "$d=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('REDIS_PASSWORD='+$d)"
     powershell -NoProfile -Command "$mac = (getmac /fo csv /nh | ConvertFrom-Csv -Header 'MAC','Transport' | Select-Object -ExpandProperty MAC -First 1); if (-not $mac) { $mac = '00-00-00-00-00-00' }; Add-Content -Path '.env' -Value ('HOST_MAC_ADDRESS=' + $mac.Replace('-',':'))"
+    
+    docker volume create kstock_config_data >nul 2>&1
+    docker run --rm -v kstock_config_data:/config -v "%cd%:/host" alpine cp /host/.env /config/.env >nul 2>&1
+    echo  [  OK ] 보안 패스워드 볼륨 저장 완료.
+    echo.
+) else (
+    echo  [ ... ] 기존 보안 볼륨 발견 - 설정 파일(Env) 복원 중...
+    docker run --rm -v kstock_config_data:/config -v "%cd%:/host" alpine cp /config/.env /host/.env >nul 2>&1
 )
 
 echo  [ ... ] 기존 K-STOCK LIVE 컨테이너 정리 중 (충돌 방지)...
@@ -106,5 +109,9 @@ echo ━━━━━━━━━━━━━━━━━━━━━━━━━
 echo  [OK] 이 창은 5초 뒤 자동으로 닫힙니다.
 echo      K-STOCK LIVE는 Docker에서 백그라운드로 계속 실행됩니다.
 echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+:: 호스트 환경의 임시 설정 파일 삭제 (무상태 유지)
+del /q .env >nul 2>&1
+
 timeout /t 5 >nul
 exit

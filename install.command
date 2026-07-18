@@ -49,25 +49,28 @@ echo ""
 
 cd "$(dirname "$0")"
 
-# .env 파일이 없으면 최초 설치로 판단하여 랜덤 보안 패스워드를 자동 생성
-if [ ! -f ".env" ]; then
-    echo -e " ${CYAN}[ ... ] 최초 설치 감지 - 각 서비스 보안 패스워드 자동 생성 중...${NC}"
+# K-STOCK 설정 데이터 볼륨 확인 및 환경변수 주입
+if ! docker volume ls | grep -q "kstock_config_data"; then
+    echo -e " ${CYAN}[ ... ] 최초 설치 감지 - 암호화 볼륨(Volume) 생성 및 설정 중...${NC}"
     POSTGRES_PWD=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 24)
     RABBITMQ_PWD=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 24)
     REDIS_PWD=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 24)
-    printf 'POSTGRES_PASSWORD=%s\nRABBITMQ_PASSWORD=%s\nREDIS_PASSWORD=%s\n' \
-        "$POSTGRES_PWD" "$RABBITMQ_PWD" "$REDIS_PWD" > .env
-    echo -e " ${GREEN}✔ 보안 패스워드 생성 완료.${NC}"
-    echo ""
-fi
+    
+    MAC=$(ip link show 2>/dev/null | awk '/ether/{print $2}' | head -n 1)
+    if [ -z "$MAC" ]; then MAC=$(ifconfig en0 2>/dev/null | awk '/ether/{print $2}'); fi
+    if [ -z "$MAC" ]; then MAC=$(ifconfig eth0 2>/dev/null | awk '/ether/{print $2}'); fi
+    if [ -z "$MAC" ]; then MAC="00:00:00:00:00:00"; fi
 
-# 호스트의 실제 MAC 주소를 스캔하여 .env에 자동 주입 (도커 컨테이너 암호화 키 생성용)
-if ! grep -q "HOST_MAC_ADDRESS=" .env 2>/dev/null; then
-    MAC=$(ifconfig en0 2>/dev/null | awk '/ether/{print $2}' || ifconfig eth0 2>/dev/null | awk '/ether/{print $2}' || ip link show | awk '/ether/{print $2}' | head -n 1)
-    if [ -z "$MAC" ]; then
-        MAC="00:00:00:00:00:00"
-    fi
-    echo "HOST_MAC_ADDRESS=$MAC" >> .env
+    printf 'POSTGRES_PASSWORD=%s\nRABBITMQ_PASSWORD=%s\nREDIS_PASSWORD=%s\nHOST_MAC_ADDRESS=%s\n' \
+        "$POSTGRES_PWD" "$RABBITMQ_PWD" "$REDIS_PWD" "$MAC" > .env
+        
+    docker volume create kstock_config_data >/dev/null 2>&1
+    docker run --rm -v kstock_config_data:/config -v "$(pwd):/host" alpine cp /host/.env /config/.env >/dev/null 2>&1
+    echo -e " ${GREEN}✔ 보안 패스워드 볼륨 저장 완료.${NC}"
+    echo ""
+else
+    echo -e " ${CYAN}[ ... ] 기존 보안 볼륨 발견 - 설정 파일(Env) 복원 중...${NC}"
+    docker run --rm -v kstock_config_data:/config -v "$(pwd):/host" alpine cp /config/.env /host/.env >/dev/null 2>&1
 fi
 
 (
@@ -167,4 +170,8 @@ if [ "$IS_DESKTOP" = true ]; then
     fi
     echo -e " ${GREEN}✔ 브라우저가 열렸습니다. 이제 이 터미널 창을 닫으셔도 됩니다.${NC}"
 fi
+
+# 호스트 환경의 임시 설정 파일 삭제 (무상태 유지)
+rm -f .env
+
 exit 0
