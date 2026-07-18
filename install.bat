@@ -30,7 +30,7 @@ echo.
 :: K-STOCK 설정 데이터 볼륨 확인 및 환경변수 주입
 docker volume ls | findstr /C:"kstock_config_data" >nul 2>&1
 if %errorlevel% neq 0 (
-    echo  [ ... ] 최초 설치 감지 - 암호화 볼륨(Volume) 생성 및 설정 중...
+    echo  [ ... ] 최초 설치 감지 - 암호화 볼륨 생성 및 설정 중...
     powershell -NoProfile -Command "$p=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('POSTGRES_PASSWORD='+$p)"
     powershell -NoProfile -Command "$r=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('RABBITMQ_PASSWORD='+$r)"
     powershell -NoProfile -Command "$d=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('REDIS_PASSWORD='+$d)"
