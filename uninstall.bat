@@ -43,12 +43,12 @@ echo  [  OK ] Docker 환경 검증 완료.
 echo.
 
 echo  [ ... ] K-STOCK LIVE 컨테이너, 볼륨, 이미지 제거 중...
-docker compose -f docker-compose.release.yml down -v --rmi all
+docker compose -f docker-compose.release.yml down -v --rmi all >nul 2>&1
 docker rm -f kstock-web kstock-app kstock-worker kstock-kafka-ui kstock-rabbitmq kstock-postgres kstock-redis kstock-chromadb kstock-kafka >nul 2>&1
 docker volume rm kstock_config_data kstock_postgres_data kstock_kafka_data kstock_chroma_data >nul 2>&1
-docker rmi -f kndoll/kstock-frontend:latest kndoll/kstock-server:latest kndoll/kstock-worker:latest postgres:15-alpine redis:7-alpine rabbitmq:3-management-alpine confluentinc/cp-kafka:7.5.0 chromadb/chroma:0.5.11 >nul 2>&1
+docker rmi -f kndoll/kstock-frontend:latest kndoll/kstock-server:latest kndoll/kstock-worker:latest postgres:15-alpine redis:7-alpine rabbitmq:3-management-alpine confluentinc/cp-kafka:7.5.0 chromadb/chroma:0.5.11 alpine containrrr/watchtower >nul 2>&1
 if exist ".env" del /f /q ".env"
-echo  [  OK ] 현재 폴더의 컨테이너가 모두 종료 및 제거되었습니다.
+echo  [  OK ] K-STOCK LIVE와 관련된 모든 시스템 및 데이터가 완벽히 제거되었습니다.
 echo.
 
 echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

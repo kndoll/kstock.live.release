@@ -29,21 +29,26 @@ echo.
 
 :: K-STOCK 설정 데이터 볼륨 확인 및 환경변수 주입
 docker volume ls | findstr /C:"kstock_config_data" >nul 2>&1
-if %errorlevel% neq 0 (
-    echo  [ ... ] 최초 설치 감지 - 암호화 볼륨 생성 및 설정 중...
-    powershell -NoProfile -Command "$p=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('POSTGRES_PASSWORD='+$p)"
-    powershell -NoProfile -Command "$r=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('RABBITMQ_PASSWORD='+$r)"
-    powershell -NoProfile -Command "$d=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('REDIS_PASSWORD='+$d)"
-    powershell -NoProfile -Command "$mac = (getmac /fo csv /nh | ConvertFrom-Csv -Header 'MAC','Transport' | Select-Object -ExpandProperty MAC -First 1); if (-not $mac) { $mac = '00-00-00-00-00-00' }; Add-Content -Path '.env' -Value ('HOST_MAC_ADDRESS=' + $mac.Replace('-',':'))"
-    
-    docker volume create kstock_config_data >nul 2>&1
-    docker run --rm -v kstock_config_data:/config -v "%cd%:/host" alpine cp /host/.env /config/.env >nul 2>&1
-    echo  [  OK ] 보안 패스워드 볼륨 저장 완료.
-    echo.
-) else (
-    echo  [ ... ] 기존 보안 볼륨 발견 - 설정 파일(Env) 복원 중...
-    docker run --rm -v kstock_config_data:/config -v "%cd%:/host" alpine cp /config/.env /host/.env >nul 2>&1
-)
+if %errorlevel% equ 0 goto :volume_exists
+
+:volume_create
+echo  [ ... ] 최초 설치 감지 - 시스템 초기 환경 설정 중...
+powershell -NoProfile -Command "$p=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('POSTGRES_PASSWORD='+$p)"
+powershell -NoProfile -Command "$r=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('RABBITMQ_PASSWORD='+$r)"
+powershell -NoProfile -Command "$d=[guid]::NewGuid().ToString().Replace('-','').Substring(0,24); Add-Content -Path '.env' -Value ('REDIS_PASSWORD='+$d)"
+powershell -NoProfile -Command "$mac = (getmac /fo csv /nh | ConvertFrom-Csv -Header 'MAC','Transport' | Select-Object -ExpandProperty MAC -First 1); if (-not $mac) { $mac = '00-00-00-00-00-00' }; Add-Content -Path '.env' -Value ('HOST_MAC_ADDRESS=' + $mac.Replace('-',':'))"
+
+docker volume create kstock_config_data >nul 2>&1
+docker run --rm -v kstock_config_data:/config -v "%cd%:/host" alpine cp /host/.env /config/.env >nul 2>&1
+echo  [  OK ] 시스템 초기 환경 설정 완료.
+echo.
+goto :volume_done
+
+:volume_exists
+echo  [ ... ] 기존 K-STOCK 설정 데이터 불러오는 중...
+docker run --rm -v kstock_config_data:/config -v "%cd%:/host" alpine cp /config/.env /host/.env >nul 2>&1
+
+:volume_done
 
 echo  [ ... ] 기존 K-STOCK LIVE 컨테이너 정리 중 (충돌 방지)...
 docker compose down >nul 2>&1

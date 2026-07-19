@@ -51,7 +51,7 @@ cd "$(dirname "$0")"
 
 # K-STOCK 설정 데이터 볼륨 확인 및 환경변수 주입
 if ! docker volume ls | grep -q "kstock_config_data"; then
-    echo -e " ${CYAN}[ ... ] 최초 설치 감지 - 암호화 볼륨(Volume) 생성 및 설정 중...${NC}"
+    echo -e " ${CYAN}[ ... ] 최초 설치 감지 - 시스템 초기 환경 설정 중...${NC}"
     POSTGRES_PWD=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 24)
     RABBITMQ_PWD=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 24)
     REDIS_PWD=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 24)
@@ -66,10 +66,10 @@ if ! docker volume ls | grep -q "kstock_config_data"; then
         
     docker volume create kstock_config_data >/dev/null 2>&1
     docker run --rm -v kstock_config_data:/config -v "$(pwd):/host" alpine cp /host/.env /config/.env >/dev/null 2>&1
-    echo -e " ${GREEN}✔ 보안 패스워드 볼륨 저장 완료.${NC}"
+    echo -e " ${GREEN}✔ 시스템 초기 환경 설정 완료.${NC}"
     echo ""
 else
-    echo -e " ${CYAN}[ ... ] 기존 보안 볼륨 발견 - 설정 파일(Env) 복원 중...${NC}"
+    echo -e " ${CYAN}[ ... ] 기존 K-STOCK 설정 데이터 불러오는 중...${NC}"
     docker run --rm -v kstock_config_data:/config -v "$(pwd):/host" alpine cp /config/.env /host/.env >/dev/null 2>&1
 fi
 
